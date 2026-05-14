@@ -4,7 +4,12 @@ import 'package:provider/provider.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/auth/screens/register_screen.dart';
 import '../features/auth/providers/auth_provider.dart';
-import '../features/guest/screens/guest_home_screen.dart';
+import '../features/exhibitor/screens/guest_home_screen.dart';
+import '../features/exhibitor/screens/exhibitor_home_screen.dart';
+import '../features/exhibitor/screens/exhibition_detail_screen.dart';
+import '../features/exhibitor/screens/application_form_screen.dart';
+import '../features/exhibitor/screens/my_applications_screen.dart';
+import '../features/exhibitor/providers/exhibitor_provider.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -14,7 +19,6 @@ final GoRouter appRouter = GoRouter(
     final role = authProvider.userRole;
     final location = state.matchedLocation;
 
-    // If not logged in and trying to access protected routes
     if (!isLoggedIn) {
       if (location.startsWith('/admin') ||
           location.startsWith('/organizer') ||
@@ -23,7 +27,6 @@ final GoRouter appRouter = GoRouter(
       }
     }
 
-    // If logged in and trying to access auth screens
     if (isLoggedIn) {
       if (location == '/login' || location == '/register') {
         if (role == 'admin') return '/admin';
@@ -49,21 +52,75 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/organizer',
-      builder: (context, state) => const Scaffold(
-        body: Center(child: Text('Organizer Home - Coming Soon')),
+      builder: (context, state) => Scaffold(
+        appBar: AppBar(
+          title: const Text('Organizer Home'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () async {
+                await context.read<AuthProvider>().logout();
+                context.go('/');
+              },
+            ),
+          ],
+        ),
+        body: const Center(child: Text('Organizer Home - Coming Soon')),
       ),
     ),
     GoRoute(
       path: '/admin',
-      builder: (context, state) => const Scaffold(
-        body: Center(child: Text('Admin Home - Coming Soon')),
+      builder: (context, state) => Scaffold(
+        appBar: AppBar(
+          title: const Text('Admin Home'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () async {
+                await context.read<AuthProvider>().logout();
+                context.go('/');
+              },
+            ),
+          ],
+        ),
+        body: const Center(child: Text('Admin Home - Coming Soon')),
       ),
     ),
     GoRoute(
       path: '/exhibitor',
-      builder: (context, state) => const Scaffold(
-        body: Center(child: Text('Exhibitor Home - Coming Soon')),
+      builder: (context, state) => ChangeNotifierProvider(
+        create: (_) => ExhibitorProvider(),
+        child: const ExhibitorHomeScreen(),
       ),
+      routes: [
+        GoRoute(
+          path: 'exhibition/:id',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return ChangeNotifierProvider(
+              create: (_) => ExhibitorProvider(),
+              child: ExhibitionDetailScreen(exhibitionId: id),
+            );
+          },
+        ),
+        GoRoute(
+          path: 'exhibition/:id/apply',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return ChangeNotifierProvider(
+              create: (_) => ExhibitorProvider(),
+              child: ApplicationFormScreen(exhibitionId: id),
+            );
+          },
+        ),
+        GoRoute(
+          path: 'applications',
+          builder: (context, state) => ChangeNotifierProvider(
+            create: (_) => ExhibitorProvider(),
+            child: const MyApplicationsScreen(),
+          ),
+        ),
+      ],
     ),
   ],
 );

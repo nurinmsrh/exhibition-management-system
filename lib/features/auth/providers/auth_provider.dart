@@ -75,11 +75,19 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _currentUser = await _authService.login(
+      final credential = await _authService.login(
         email: email,
         password: password,
       );
 
+      if (credential == null) {
+        _errorMessage = 'Login failed. Please try again.';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      _currentUser = credential;
       await _saveRole(_currentUser!.role);
       _isLoading = false;
       notifyListeners();
