@@ -30,8 +30,8 @@ class _AdminExhibitionFormScreenState
   void initState() {
     super.initState();
     if (widget.exhibitionId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _loadExhibition();
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await _loadExhibition();
       });
     }
   }
@@ -44,8 +44,9 @@ class _AdminExhibitionFormScreenState
     super.dispose();
   }
 
-  void _loadExhibition() {
+  Future<void> _loadExhibition() async {
     final provider = context.read<AdminProvider>();
+    await provider.loadExhibitions();
     try {
       _exhibition = provider.exhibitions.firstWhere(
             (e) => e.id == widget.exhibitionId,

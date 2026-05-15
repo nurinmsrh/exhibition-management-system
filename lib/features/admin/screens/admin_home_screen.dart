@@ -28,19 +28,23 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
 
   Future<void> _loadDashboard() async {
     final provider = context.read<AdminProvider>();
-    await provider.loadUsers();
-    await provider.loadExhibitions();
-    await provider.loadApplications();
+    await Future.wait([
+      provider.loadUsers(),
+      provider.loadExhibitions(),
+      provider.loadApplications(),
+    ]);
 
-    setState(() {
-      _totalUsers = provider.users.length;
-      _totalExhibitions = provider.exhibitions.length;
-      _totalApplications = provider.applications.length;
-      _pendingApplications = provider.applications
-          .where((a) => a.status == 'pending')
-          .length;
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _totalUsers = provider.users.length;
+        _totalExhibitions = provider.exhibitions.length;
+        _totalApplications = provider.applications.length;
+        _pendingApplications = provider.applications
+            .where((a) => a.status == 'pending')
+            .length;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
