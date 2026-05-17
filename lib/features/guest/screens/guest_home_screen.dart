@@ -94,7 +94,7 @@ class _GuestHomeScreenState extends State<GuestHomeScreen> {
               controller: _searchController,
               onChanged: _onSearch,
               decoration: InputDecoration(
-                hintText: 'Search exhibitions...',
+                hintText: 'Search exhibitions',
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),

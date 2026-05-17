@@ -114,4 +114,30 @@ class ExhibitionService {
       rethrow;
     }
   }
+
+  // Get reserved booth count for an exhibition
+  Future<int> getReservedBoothCount(String exhibitionId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('booths')
+          .where('exhibitionId', isEqualTo: exhibitionId)
+          .where('status', whereIn: ['booked', 'reserved'])
+          .get();
+      return snapshot.docs.length;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  Future<int> getTotalBoothCount(String exhibitionId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('booths')
+          .where('exhibitionId', isEqualTo: exhibitionId)
+          .get();
+      return snapshot.docs.length;
+    } catch (e) {
+      return 0;
+    }
+  }
 }

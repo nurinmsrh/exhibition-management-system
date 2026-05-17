@@ -7,6 +7,7 @@ import '../../../data/services/auth_service.dart';
 import '../../../data/services/exhibition_service.dart';
 import '../../../data/services/booth_service.dart';
 import '../../../data/services/application_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AdminProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -32,6 +33,19 @@ class AdminProvider extends ChangeNotifier {
   String get errorMessage => _errorMessage;
 
   // ─── USERS ───────────────────────────────────────────────
+
+  Future<bool> updateUserStatus(String uid, bool isActive) async {
+    try {
+      await _authService.updateUserStatus(uid, isActive);
+      await loadUsers();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> loadUsers() async {
     _isLoading = true;
     notifyListeners();
@@ -152,6 +166,25 @@ class AdminProvider extends ChangeNotifier {
   }
 
   // ─── BOOTHS ──────────────────────────────────────────────
+
+  Future<void> loadAllBooths() async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('booths')
+          .get();
+      _booths = snapshot.docs
+          .map((doc) => BoothModel.fromMap(doc.data()))
+          .toList();
+    } catch (e) {
+      _errorMessage = e.toString();
+    }
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  // Load booths for a specific exhibition (used by booth screens)
   Future<void> loadBooths(String exhibitionId) async {
     _isLoading = true;
     notifyListeners();

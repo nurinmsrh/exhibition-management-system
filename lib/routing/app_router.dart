@@ -18,6 +18,7 @@ import '../features/admin/screens/admin_booths_screen.dart';
 import '../features/admin/screens/admin_booth_form_screen.dart';
 import '../features/admin/screens/admin_applications_screen.dart';
 import '../features/admin/providers/admin_provider.dart';
+import '../features/admin/screens/admin_floor_plan_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -192,6 +193,13 @@ final GoRouter appRouter = GoRouter(
           builder: (context, state) => ChangeNotifierProvider(
             create: (_) => AdminProvider(),
             child: const AdminApplicationsScreen(),
+          ),
+        ),
+        GoRoute(
+          path: 'floor-plan',
+          builder: (context, state) => ChangeNotifierProvider(
+            create: (_) => AdminProvider(),
+            child: const AdminFloorPlanScreen(),
           ),
         ),
       ],

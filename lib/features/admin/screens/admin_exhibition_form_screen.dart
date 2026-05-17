@@ -67,8 +67,20 @@ class _AdminExhibitionFormScreenState
     final picked = await showDatePicker(
       context: context,
       initialDate: isStart ? _startDate : _endDate,
-      firstDate: DateTime.now(),
+      firstDate: DateTime(2020),
       lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF185FA5),
+              onPrimary: Colors.white,
+              onSurface: Color(0xFF1A1C1E),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
@@ -86,7 +98,9 @@ class _AdminExhibitionFormScreenState
     if (_endDate.isBefore(_startDate)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('End date must be after start date')),
+          content: Text('End date must be after start date'),
+          backgroundColor: Color(0xFFDC3545),
+        ),
       );
       return;
     }
@@ -126,29 +140,145 @@ class _AdminExhibitionFormScreenState
           content: Text(widget.exhibitionId == null
               ? 'Exhibition created!'
               : 'Exhibition updated!'),
+          backgroundColor: const Color(0xFF1D9E75),
         ),
       );
       context.go('/admin/exhibitions');
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(provider.errorMessage)),
+        SnackBar(
+          content: Text(provider.errorMessage),
+          backgroundColor: const Color(0xFFDC3545),
+        ),
       );
     }
   }
 
+  InputDecoration _inputDecoration({
+    required String hint,
+    required IconData icon,
+  }) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle:
+      const TextStyle(fontSize: 13, color: Color(0xFF8E8E93)),
+      prefixIcon:
+      Icon(icon, size: 18, color: const Color(0xFF6C757D)),
+      contentPadding:
+      const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFFDEE2E6)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFFDEE2E6)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide:
+        const BorderSide(color: Color(0xFF185FA5), width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFFDC3545)),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(
+            color: Color(0xFFDC3545), width: 1.5),
+      ),
+      filled: true,
+      fillColor: Colors.white,
+    );
+  }
+
+  InputDecoration _dropdownDecoration() {
+    return InputDecoration(
+      contentPadding:
+      const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFFDEE2E6)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Color(0xFFDEE2E6)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide:
+        const BorderSide(color: Color(0xFF185FA5), width: 1.5),
+      ),
+      filled: true,
+      fillColor: Colors.white,
+    );
+  }
+
+  DropdownMenuItem<String> _statusItem(
+      String value, String label, Color color) {
+    return DropdownMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(label, style: const TextStyle(fontSize: 14)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: Color(0xFF6C757D),
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    const months = [
+      '',
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return '${date.day} ${months[date.month]} ${date.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.exhibitionId != null;
+
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: Text(widget.exhibitionId == null
-            ? 'Create Exhibition'
-            : 'Edit Exhibition'),
-        backgroundColor: Colors.deepPurple,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        elevation: 0.5,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.chevron_left,
+              color: Color(0xFF185FA5)),
           onPressed: () => context.go('/admin/exhibitions'),
         ),
+        title: Text(
+          isEditing ? 'Edit Exhibition' : 'Create Exhibition',
+          style: const TextStyle(
+            color: Color(0xFF1A1C1E),
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -157,117 +287,286 @@ class _AdminExhibitionFormScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextFormField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Exhibition Title',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.event),
+              // Info banner
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F3F5),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                validator: (value) =>
-                value == null || value.isEmpty ? 'Required' : null,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.info_outline,
+                        size: 18, color: Color(0xFF6C757D)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        isEditing
+                            ? 'Update the details of this exhibition event.'
+                            : 'Fill in the details to create a new exhibition event.',
+                        style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF6C757D)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Exhibition details card
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border:
+                  Border.all(color: const Color(0xFFDEE2E6)),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Exhibition Details',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1A1C1E),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildLabel('Exhibition Title'),
+                    const SizedBox(height: 6),
+                    TextFormField(
+                      controller: _titleController,
+                      style: const TextStyle(fontSize: 14),
+                      decoration: _inputDecoration(
+                        hint: 'e.g. Tech Innovators Expo 2025',
+                        icon: Icons.event_outlined,
+                      ),
+                      validator: (v) => v == null || v.isEmpty
+                          ? 'Title is required'
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildLabel('Description'),
+                    const SizedBox(height: 6),
+                    TextFormField(
+                      controller: _descriptionController,
+                      maxLines: 3,
+                      style: const TextStyle(fontSize: 14),
+                      decoration: _inputDecoration(
+                        hint: 'Describe the exhibition...',
+                        icon: Icons.description_outlined,
+                      ),
+                      validator: (v) => v == null || v.isEmpty
+                          ? 'Description is required'
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildLabel('Venue'),
+                    const SizedBox(height: 6),
+                    TextFormField(
+                      controller: _venueController,
+                      style: const TextStyle(fontSize: 14),
+                      decoration: _inputDecoration(
+                        hint: 'e.g. Kuala Lumpur Convention Centre',
+                        icon: Icons.location_on_outlined,
+                      ),
+                      validator: (v) => v == null || v.isEmpty
+                          ? 'Venue is required'
+                          : null,
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.description),
+
+              // Dates card
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border:
+                  Border.all(color: const Color(0xFFDEE2E6)),
                 ),
-                validator: (value) =>
-                value == null || value.isEmpty ? 'Required' : null,
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Event Duration',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1A1C1E),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildLabel('Start Date'),
+                    const SizedBox(height: 6),
+                    GestureDetector(
+                      onTap: () => _pickDate(true),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 13),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                              color: const Color(0xFFDEE2E6)),
+                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.white,
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                                Icons.calendar_today_outlined,
+                                size: 18,
+                                color: Color(0xFF6C757D)),
+                            const SizedBox(width: 10),
+                            Text(
+                              _formatDate(_startDate),
+                              style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF1A1C1E)),
+                            ),
+                            const Spacer(),
+                            const Icon(Icons.chevron_right,
+                                size: 18,
+                                color: Color(0xFF6C757D)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildLabel('End Date'),
+                    const SizedBox(height: 6),
+                    GestureDetector(
+                      onTap: () => _pickDate(false),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 13),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                              color: const Color(0xFFDEE2E6)),
+                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.white,
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                                Icons.calendar_today_outlined,
+                                size: 18,
+                                color: Color(0xFF6C757D)),
+                            const SizedBox(width: 10),
+                            Text(
+                              _formatDate(_endDate),
+                              style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF1A1C1E)),
+                            ),
+                            const Spacer(),
+                            const Icon(Icons.chevron_right,
+                                size: 18,
+                                color: Color(0xFF6C757D)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _venueController,
-                decoration: const InputDecoration(
-                  labelText: 'Venue',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.location_on),
-                ),
-                validator: (value) =>
-                value == null || value.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 16),
-              // Start date
-              InkWell(
-                onTap: () => _pickDate(true),
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Start Date',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.calendar_today),
+
+              // Status card (edit only)
+              if (isEditing) ...[
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: const Color(0xFFDEE2E6)),
                   ),
-                  child: Text(_formatDate(_startDate)),
-                ),
-              ),
-              const SizedBox(height: 16),
-              // End date
-              InkWell(
-                onTap: () => _pickDate(false),
-                child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'End Date',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.calendar_today),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Exhibition Status',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1A1C1E),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildLabel('Status'),
+                      const SizedBox(height: 6),
+                      DropdownButtonFormField<String>(
+                        value: _status,
+                        style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF1A1C1E)),
+                        decoration: _dropdownDecoration(),
+                        items: [
+                          _statusItem('upcoming', 'Upcoming',
+                              const Color(0xFF185FA5)),
+                          _statusItem('ongoing', 'Ongoing',
+                              const Color(0xFF1D9E75)),
+                          _statusItem('completed', 'Completed',
+                              const Color(0xFF6C757D)),
+                        ],
+                        onChanged: (value) =>
+                            setState(() => _status = value!),
+                      ),
+                    ],
                   ),
-                  child: Text(_formatDate(_endDate)),
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Status (edit only)
-              if (widget.exhibitionId != null) ...[
-                DropdownButtonFormField<String>(
-                  value: _status,
-                  decoration: const InputDecoration(
-                    labelText: 'Status',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.info),
-                  ),
-                  items: ['upcoming', 'ongoing', 'completed']
-                      .map((s) => DropdownMenuItem(
-                    value: s,
-                    child: Text(s.toUpperCase()),
-                  ))
-                      .toList(),
-                  onChanged: (value) =>
-                      setState(() => _status = value!),
                 ),
                 const SizedBox(height: 16),
               ],
+
+              // Save button
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _save,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
+                    backgroundColor: const Color(0xFF185FA5),
                     foregroundColor: Colors.white,
+                    disabledBackgroundColor:
+                    const Color(0xFF185FA5).withOpacity(0.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
+                    elevation: 0,
                   ),
                   child: _isLoading
-                      ? const CircularProgressIndicator(
-                      color: Colors.white)
+                      ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
                       : Text(
-                    widget.exhibitionId == null
-                        ? 'Create Exhibition'
-                        : 'Save Changes',
-                    style: const TextStyle(fontSize: 16),
+                    isEditing
+                        ? 'Save Changes'
+                        : 'Create Exhibition',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
+              const SizedBox(height: 24),
             ],
           ),
         ),
       ),
     );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
   }
 }

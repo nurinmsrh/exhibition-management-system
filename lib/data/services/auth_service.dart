@@ -122,4 +122,16 @@ class AuthService {
       rethrow;
     }
   }
+
+  // Update user active status (admin only)
+  Future<void> updateUserStatus(String uid, bool isActive) async {
+    try {
+      await _firestore
+          .collection('users')
+          .doc(uid)
+          .update({'isActive': isActive});
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
