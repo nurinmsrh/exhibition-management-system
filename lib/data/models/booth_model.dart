@@ -1,16 +1,20 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class BoothModel {
   final String id;
   final String exhibitionId;
   final String boothNumber;
-  final String type; // standard, premium
+  final String type;
   final String size;
   final double price;
-  final String status; // available, booked, unavailable
-  final List<String> amenities; // wifi, power, water
+  final String status;
+  final List<String> amenities;
   final double positionX;
   final double positionY;
   final double width;
   final double height;
+  final String description;
+  final bool isPublished;
 
   BoothModel({
     required this.id,
@@ -25,6 +29,8 @@ class BoothModel {
     this.positionY = 0,
     this.width = 50,
     this.height = 50,
+    this.description = '',
+    this.isPublished = true,
   });
 
   factory BoothModel.fromMap(Map<String, dynamic> map) {
@@ -41,6 +47,8 @@ class BoothModel {
       positionY: (map['positionY'] ?? 0).toDouble(),
       width: (map['width'] ?? 50).toDouble(),
       height: (map['height'] ?? 50).toDouble(),
+      description: map['description'] ?? '',
+      isPublished: map['isPublished'] ?? true,
     );
   }
 
@@ -58,6 +66,8 @@ class BoothModel {
       'positionY': positionY,
       'width': width,
       'height': height,
+      'description': description,
+      'isPublished': isPublished,
     };
   }
 }

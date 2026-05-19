@@ -90,8 +90,41 @@ class _AdminBoothFormScreenState extends State<AdminBoothFormScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final posX =
+        double.tryParse(_positionXController.text.trim()) ?? 0;
+    final posY =
+        double.tryParse(_positionYController.text.trim()) ?? 0;
+    final w =
+        double.tryParse(_widthController.text.trim()) ?? 50;
+    final h =
+        double.tryParse(_heightController.text.trim()) ?? 50;
+
     setState(() => _isLoading = true);
+
+    // Always reload fresh booths before checking
     final provider = context.read<AdminProvider>();
+    await provider.loadBooths(widget.exhibitionId);
+
+    // Check for exact position conflict
+    final conflict = provider.booths.any((b) {
+      if (b.id == widget.boothId) return false; // skip self
+      return b.positionX == posX && b.positionY == posY;
+    });
+
+    if (conflict) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+                'A booth already exists at this position. Please choose different coordinates.'),
+            backgroundColor: Color(0xFFDC3545),
+          ),
+        );
+      }
+      return;
+    }
+
     bool success;
 
     if (widget.boothId == null) {
@@ -102,12 +135,10 @@ class _AdminBoothFormScreenState extends State<AdminBoothFormScreen> {
         size: _sizeController.text.trim(),
         price: double.tryParse(_priceController.text.trim()) ?? 0,
         amenities: _selectedAmenities,
-        positionX:
-        double.tryParse(_positionXController.text.trim()) ?? 0,
-        positionY:
-        double.tryParse(_positionYController.text.trim()) ?? 0,
-        width: double.tryParse(_widthController.text.trim()) ?? 50,
-        height: double.tryParse(_heightController.text.trim()) ?? 50,
+        positionX: posX,
+        positionY: posY,
+        width: w,
+        height: h,
       );
     } else {
       success = await provider.updateBooth(
@@ -119,14 +150,10 @@ class _AdminBoothFormScreenState extends State<AdminBoothFormScreen> {
           'price':
           double.tryParse(_priceController.text.trim()) ?? 0,
           'amenities': _selectedAmenities,
-          'positionX':
-          double.tryParse(_positionXController.text.trim()) ?? 0,
-          'positionY':
-          double.tryParse(_positionYController.text.trim()) ?? 0,
-          'width':
-          double.tryParse(_widthController.text.trim()) ?? 50,
-          'height':
-          double.tryParse(_heightController.text.trim()) ?? 50,
+          'positionX': posX,
+          'positionY': posY,
+          'width': w,
+          'height': h,
           'status': _status,
         },
         widget.exhibitionId,
@@ -141,17 +168,20 @@ class _AdminBoothFormScreenState extends State<AdminBoothFormScreen> {
           content: Text(widget.boothId == null
               ? 'Booth created!'
               : 'Booth updated!'),
+          backgroundColor: const Color(0xFF1D9E75),
         ),
       );
       context.go(
           '/admin/exhibitions/${widget.exhibitionId}/booths');
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(provider.errorMessage)),
+        SnackBar(
+          content: Text(provider.errorMessage),
+          backgroundColor: const Color(0xFFDC3545),
+        ),
       );
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

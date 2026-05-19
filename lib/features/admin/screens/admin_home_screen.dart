@@ -13,6 +13,7 @@ class AdminHomeScreen extends StatefulWidget {
 
 class _AdminHomeScreenState extends State<AdminHomeScreen> {
   int _totalUsers = 0;
+  int _activeUsers = 0;
   int _totalExhibitions = 0;
   int _totalApplications = 0;
   int _pendingApplications = 0;
@@ -33,10 +34,11 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
       provider.loadExhibitions(),
       provider.loadApplications(),
     ]);
-
     if (mounted) {
       setState(() {
         _totalUsers = provider.users.length;
+        _activeUsers =
+            provider.users.where((u) => u.isActive).length;
         _totalExhibitions = provider.exhibitions.length;
         _totalApplications = provider.applications.length;
         _pendingApplications = provider.applications
@@ -52,17 +54,29 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     final authProvider = context.watch<AuthProvider>();
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        title: const Text('Admin Dashboard'),
-        backgroundColor: Colors.deepPurple,
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+        automaticallyImplyLeading: false,
+        title: const Text(
+          'Admin Dashboard',
+          style: TextStyle(
+            color: Color(0xFF1A1C1E),
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout_outlined,
+                color: Color(0xFF6C757D)),
             onPressed: () async {
               await authProvider.logout();
               if (context.mounted) context.go('/');
             },
+            tooltip: 'Logout',
           ),
         ],
       ),
@@ -73,139 +87,261 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Welcome
-            Text(
-              'Welcome, ${authProvider.currentUser?.name ?? 'Admin'}!',
+            _buildWelcomeBanner(authProvider),
+            const SizedBox(height: 20),
+            _buildKpiGrid(),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+      bottomNavigationBar: _buildBottomNav(context),
+    );
+  }
+
+  // ── WELCOME BANNER ───────────────────────────────────────
+  Widget _buildWelcomeBanner(AuthProvider authProvider) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF185FA5),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 22,
+            backgroundColor: Colors.white.withOpacity(0.2),
+            child: Text(
+              _initials(
+                  authProvider.currentUser?.name ?? 'Admin'),
               style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
               ),
             ),
-            const SizedBox(height: 4),
-            const Text(
-              'Here\'s an overview of the system.',
-              style: TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(height: 24),
-            // Stats grid
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 1.5,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _StatCard(
-                  title: 'Total Users',
-                  value: _totalUsers.toString(),
-                  icon: Icons.people,
-                  color: Colors.blue,
+                Text(
+                  'Welcome back, ${authProvider.currentUser?.name ?? 'Admin'}!',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                _StatCard(
-                  title: 'Exhibitions',
-                  value: _totalExhibitions.toString(),
-                  icon: Icons.event,
-                  color: Colors.green,
-                ),
-                _StatCard(
-                  title: 'Applications',
-                  value: _totalApplications.toString(),
-                  icon: Icons.assignment,
-                  color: Colors.orange,
-                ),
-                _StatCard(
-                  title: 'Pending',
-                  value: _pendingApplications.toString(),
-                  icon: Icons.pending_actions,
-                  color: Colors.red,
+                const SizedBox(height: 2),
+                const Text(
+                  'Here\'s an overview of the system.',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
-            // Quick actions
-            const Text(
-              'Quick Actions',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── KPI GRID ─────────────────────────────────────────────
+  Widget _buildKpiGrid() {
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisSpacing: 10,
+      mainAxisSpacing: 10,
+      childAspectRatio: 1.55,
+      children: [
+        _KpiCard(
+          icon: Icons.person_outline,
+          label: 'Total Users',
+          value: '$_totalUsers',
+          sub: '$_activeUsers active',
+          iconColor: const Color(0xFF185FA5),
+          bgColor: const Color(0xFFE6F1FB),
+        ),
+        _KpiCard(
+          icon: Icons.event_outlined,
+          label: 'Exhibitions',
+          value: '$_totalExhibitions',
+          sub: 'All exhibitions',
+          iconColor: const Color(0xFF1D9E75),
+          bgColor: const Color(0xFFE1F5EE),
+        ),
+        _KpiCard(
+          icon: Icons.assignment_outlined,
+          label: 'Applications',
+          value: '$_totalApplications',
+          sub: 'Total submitted',
+          iconColor: const Color(0xFFEF9F27),
+          bgColor: const Color(0xFFFAEEDA),
+        ),
+        _KpiCard(
+          icon: Icons.pending_actions_outlined,
+          label: 'Pending',
+          value: '$_pendingApplications',
+          sub: 'Awaiting review',
+          iconColor: const Color(0xFFDC3545),
+          bgColor: const Color(0xFFFCEBEB),
+        ),
+      ],
+    );
+  }
+
+  // ── BOTTOM NAV ───────────────────────────────────────────
+  Widget _buildBottomNav(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border:
+        Border(top: BorderSide(color: Color(0xFFDEE2E6))),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _NavItem(
+                icon: Icons.home_outlined,
+                label: 'Dashboard',
+                isActive: true,
+                onTap: () {},
               ),
-            ),
-            const SizedBox(height: 16),
-            _ActionTile(
-              icon: Icons.people,
-              title: 'Manage Users',
-              subtitle: 'View and manage user accounts',
-              color: Colors.blue,
-              onTap: () => context.go('/admin/users'),
-            ),
-            _ActionTile(
-              icon: Icons.event,
-              title: 'Manage Exhibitions',
-              subtitle: 'Create, edit, publish exhibitions',
-              color: Colors.green,
-              onTap: () => context.go('/admin/exhibitions'),
-            ),
-            _ActionTile(
-              icon: Icons.assignment,
-              title: 'Manage Applications',
-              subtitle: 'View and manage all applications',
-              color: Colors.orange,
-              onTap: () => context.go('/admin/applications'),
-            ),
-          ],
+              _NavItem(
+                icon: Icons.calendar_today_outlined,
+                label: 'Events',
+                onTap: () =>
+                    context.go('/admin/exhibitions'),
+              ),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  _NavItem(
+                    icon: Icons.description_outlined,
+                    label: 'Applications',
+                    onTap: () =>
+                        context.go('/admin/applications'),
+                  ),
+                  if (_pendingApplications > 0)
+                    Positioned(
+                      top: -2,
+                      right: 4,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFDC3545),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '$_pendingApplications',
+                          style: const TextStyle(
+                              fontSize: 9,
+                              color: Colors.white),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              _NavItem(
+                icon: Icons.people_outline,
+                label: 'Users',
+                onTap: () => context.go('/admin/users'),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+
+  String _initials(String name) {
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return name.isNotEmpty ? name[0].toUpperCase() : 'A';
+  }
 }
 
-class _StatCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
+// ── REUSABLE WIDGETS ─────────────────────────────────────────
 
-  const _StatCard({
-    required this.title,
-    required this.value,
+class _KpiCard extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final String sub;
+  final Color iconColor;
+  final Color bgColor;
+
+  const _KpiCard({
     required this.icon,
-    required this.color,
+    required this.label,
+    required this.value,
+    required this.sub,
+    required this.iconColor,
+    required this.bgColor,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFDEE2E6)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(icon, color: color, size: 28),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
             children: [
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: color,
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  borderRadius: BorderRadius.circular(6),
                 ),
+                child: Icon(icon, size: 14, color: iconColor),
               ),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF6C757D),
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF1A1C1E),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            sub,
+            style: const TextStyle(
+              fontSize: 10,
+              color: Color(0xFF6C757D),
+            ),
           ),
         ],
       ),
@@ -213,44 +349,45 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _ActionTile extends StatelessWidget {
+class _NavItem extends StatelessWidget {
   final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
+  final String label;
+  final bool isActive;
   final VoidCallback onTap;
 
-  const _ActionTile({
+  const _NavItem({
     required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
+    required this.label,
+    this.isActive = false,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon,
+              size: 22,
+              color: isActive
+                  ? const Color(0xFF185FA5)
+                  : const Color(0xFF6C757D)),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: isActive
+                  ? FontWeight.w700
+                  : FontWeight.w400,
+              color: isActive
+                  ? const Color(0xFF185FA5)
+                  : const Color(0xFF6C757D),
+            ),
           ),
-          child: Icon(icon, color: color),
-        ),
-        title: Text(
-          title,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(subtitle),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: onTap,
+        ],
       ),
     );
   }

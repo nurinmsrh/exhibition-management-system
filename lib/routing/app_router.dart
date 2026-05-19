@@ -17,8 +17,8 @@ import '../features/admin/screens/admin_exhibition_form_screen.dart';
 import '../features/admin/screens/admin_booths_screen.dart';
 import '../features/admin/screens/admin_booth_form_screen.dart';
 import '../features/admin/screens/admin_applications_screen.dart';
+import '../features/admin/screens/admin_booth_types_screen.dart';
 import '../features/admin/providers/admin_provider.dart';
-import '../features/admin/screens/admin_floor_plan_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
@@ -59,6 +59,7 @@ final GoRouter appRouter = GoRouter(
       path: '/register',
       builder: (context, state) => const RegisterScreen(),
     ),
+
     // Exhibitor routes
     GoRoute(
       path: '/exhibitor',
@@ -96,6 +97,7 @@ final GoRouter appRouter = GoRouter(
         ),
       ],
     ),
+
     // Organizer routes
     GoRoute(
       path: '/organizer',
@@ -112,9 +114,11 @@ final GoRouter appRouter = GoRouter(
             ),
           ],
         ),
-        body: const Center(child: Text('Organizer Home - Coming Soon')),
+        body: const Center(
+            child: Text('Organizer Home - Coming Soon')),
       ),
     ),
+
     // Admin routes
     GoRoute(
       path: '/admin',
@@ -196,10 +200,10 @@ final GoRouter appRouter = GoRouter(
           ),
         ),
         GoRoute(
-          path: 'floor-plan',
+          path: 'booth-types',
           builder: (context, state) => ChangeNotifierProvider(
             create: (_) => AdminProvider(),
-            child: const AdminFloorPlanScreen(),
+            child: const AdminBoothTypesScreen(),
           ),
         ),
       ],

@@ -22,7 +22,6 @@ class _AdminExhibitionFormScreenState
   final _venueController = TextEditingController();
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now().add(const Duration(days: 7));
-  String _status = 'upcoming';
   bool _isLoading = false;
   ExhibitionModel? _exhibition;
 
@@ -56,7 +55,6 @@ class _AdminExhibitionFormScreenState
       _venueController.text = _exhibition!.venue;
       _startDate = _exhibition!.startDate;
       _endDate = _exhibition!.endDate;
-      _status = _exhibition!.status;
       setState(() {});
     } catch (e) {
       // Exhibition not found
@@ -127,7 +125,6 @@ class _AdminExhibitionFormScreenState
           'venue': _venueController.text.trim(),
           'startDate': _startDate,
           'endDate': _endDate,
-          'status': _status,
         },
       );
     }
@@ -190,49 +187,6 @@ class _AdminExhibitionFormScreenState
       ),
       filled: true,
       fillColor: Colors.white,
-    );
-  }
-
-  InputDecoration _dropdownDecoration() {
-    return InputDecoration(
-      contentPadding:
-      const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFDEE2E6)),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide: const BorderSide(color: Color(0xFFDEE2E6)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
-        borderSide:
-        const BorderSide(color: Color(0xFF185FA5), width: 1.5),
-      ),
-      filled: true,
-      fillColor: Colors.white,
-    );
-  }
-
-  DropdownMenuItem<String> _statusItem(
-      String value, String label, Color color) {
-    return DropdownMenuItem(
-      value: value,
-      child: Row(
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(label, style: const TextStyle(fontSize: 14)),
-        ],
-      ),
     );
   }
 
@@ -478,53 +432,6 @@ class _AdminExhibitionFormScreenState
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Status card (edit only)
-              if (isEditing) ...[
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: const Color(0xFFDEE2E6)),
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Exhibition Status',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF1A1C1E),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildLabel('Status'),
-                      const SizedBox(height: 6),
-                      DropdownButtonFormField<String>(
-                        value: _status,
-                        style: const TextStyle(
-                            fontSize: 14,
-                            color: Color(0xFF1A1C1E)),
-                        decoration: _dropdownDecoration(),
-                        items: [
-                          _statusItem('upcoming', 'Upcoming',
-                              const Color(0xFF185FA5)),
-                          _statusItem('ongoing', 'Ongoing',
-                              const Color(0xFF1D9E75)),
-                          _statusItem('completed', 'Completed',
-                              const Color(0xFF6C757D)),
-                        ],
-                        onChanged: (value) =>
-                            setState(() => _status = value!),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
 
               // Save button
               SizedBox(

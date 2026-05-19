@@ -51,9 +51,17 @@ class ExhibitionModel {
       'endDate': endDate,
       'organizerId': organizerId,
       'isPublished': isPublished,
-      'status': status,
       'floorPlanUrl': floorPlanUrl,
       'createdAt': createdAt,
     };
+  }
+
+  // Computed status — never stored, always derived from dates + isPublished
+  String get computedStatus {
+    if (!isPublished) return 'unpublished';
+    final now = DateTime.now();
+    if (now.isBefore(startDate)) return 'upcoming';
+    if (now.isAfter(endDate)) return 'completed';
+    return 'ongoing';
   }
 }
